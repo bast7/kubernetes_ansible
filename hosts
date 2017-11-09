@@ -1,0 +1,6 @@
+[k8s-nodes]
+worker-node1 ansible_ssh_host=10.22.24.90
+worker-node2 ansible_ssh_host=10.22.24.141
+
+[k8s-master]
+k8s-master1 ansible_ssh_host=10.22.24.27

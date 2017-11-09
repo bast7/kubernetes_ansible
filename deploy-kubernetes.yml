@@ -1,0 +1,24 @@
+---
+- name: Deploy kubernetes Master
+  hosts: k8s-master
+  remote_user: centos
+  become: true
+  roles:
+  - docker
+  - kubernetes-master
+
+- name: Deploy kubernetes Nodes
+  hosts: k8s-nodes
+  remote_user: centos
+  become: true
+  roles:
+  - docker
+  - kubernetes-node
+
+#- name: Install Dashboard
+#  hosts: k8s-master
+#  remote_user: centos
+#  become: true
+#  roles:
+#  - kubernetes-dashboard
+

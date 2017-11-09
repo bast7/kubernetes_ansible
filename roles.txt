@@ -1,0 +1,5 @@
+docker
+docker-registry
+kubernetes-master
+kubernetes-node
+kubernetes-dashboard

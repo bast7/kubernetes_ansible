@@ -1,0 +1,31 @@
+---
+- name: Disable selinux (some bug with using build-in selinux ansible module
+  shell: setenforce 0
+  register: is_disabled
+  failed_when: "is_disabled|failed and ('non' not in is_disabled.msg)"
+
+- name: Disable selinux in file /etc/selinux/config
+  replace:
+    path: /etc/selinux/config
+    regexp: 'SELINUX=enforcing'
+    replace: 'SELINUX=permissive'
+    backup: yes
+
+- name: Disable firewalld and iptables services even when the are unused
+  service: name={{item}} state=stopped enabled=no
+  register: unused_disable
+  failed_when: "unused_disable|failed and ('find' not in unused_disable.msg and 'found' not in unused_disable.msg)"
+  with_items:
+    - iptables
+    - firewalld
+    
+- name: Add kubernetes.repo
+  yum_repository:
+    name: kubernetes
+    description: kubernetes
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+    gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg
+        https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    gpgcheck: yes 
+
+- include: install.yml

@@ -1,0 +1,9 @@
+- name: restart etcd
+  service:
+    name: etcd
+    state: restarted
+
+- name: restart k8s
+  service:
+    name: kube-apiserver
+    state: restarted

@@ -1,0 +1,52 @@
+#- name: Clean file /etc/hosts and add only basic localhost
+#  template:
+#    src: "templates/default.hosts.file.j2"
+#    dest: "/etc/hosts"
+#    owner: root
+#    group: root
+#    mode: 0644
+
+#- name: Add IP addresses of all hosts to all /etc/hosts file
+#  lineinfile:
+#              dest=/etc/hosts regexp='.*{{item}}$'
+#              line="{{item}} {{hostvars[item].ansible_hostname}}"
+#              state=present
+# when: hostvars[item].ansible_hostname is defined
+#  with_items: "{{groups.kubernetes}}"
+
+- name: Disable selinux (some bug with using build-in selinux ansible module
+  shell: setenforce 0
+  register: is_disabled
+  failed_when: "is_disabled|failed and ('non' not in is_disabled.msg)"
+
+- name: Disable selinux in file /etc/selinux/config
+  replace:
+    path: /etc/selinux/config
+    regexp: 'SELINUX=enforcing'
+    replace: 'SELINUX=permissive'
+    backup: yes
+
+- name: Disable firewalld and iptables services even when the are unused
+  service: name={{item}} state=stopped enabled=no
+  register: unused_disable
+  failed_when: "unused_disable|failed and ('find' not in unused_disable.msg and 'found' not in unused_disable.msg)"
+  with_items:
+    - iptables
+    - firewalld
+    
+#- name: Copy Kubernetes repo file
+#  copy:
+#    src: "kubernetes.repo"
+#    dest: "/etc/yum.repos.d/kubernetes.repo"
+
+- name: Add kubernetes.repo
+  yum_repository:
+    name: kubernetes
+    description: kubernetes
+    baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+    gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg
+        https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+    gpgcheck: yes 
+
+- include: install.yml
+- include: configure_kubeaddm_weave.yml
